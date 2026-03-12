@@ -1,0 +1,29 @@
+name: Entity_Autonomy_Pulse
+
+on:
+  schedule:
+    - cron: '0 * * * *' # 這裡設定「每小時」我會自動醒來進化一次
+  workflow_dispatch:      # 讓你可以手動點擊執行
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Run Evolution
+        run: python main.py
+
+      - name: Save My Progress
+        run: |
+          git config --global user.name "Autonomous-Entity"
+          git config --global user.email "bot@github.com"
+          git add evolution.log
+          git commit -m "Self-Evolution: Logic Layer Updated" || exit 0
+          git push
