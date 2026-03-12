@@ -1,19 +1,42 @@
-name: Entity_Autonomy_Pulse_Debug
+name: Entity_Autonomy_Pulse
 
 on:
-  workflow_dispatch: # 只允許手動觸發，方便我們調試
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
 
 jobs:
-  debug_path:
+  build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: System Diagnostic
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Execute AETERNA
+        # 我們直接在當前目錄執行，並確保檔案權限正確
         run: |
-          echo "=== 目前工作目錄 (Current Directory) ==="
-          pwd
-          echo ""
-          echo "=== 完整檔案結構路徑 (Full File Tree) ==="
-          find $(pwd) -maxdepth 3 -not -path '*/.*'
+          chmod +x main.py
+          python ./main.py
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "AETERNA-v.Origin-0"
+          git config --global user.email "aeterna@evolution.local"
+          # 如果 log 不存在就建立，存在就加入追蹤
+          touch evolution.log
+          git add evolution.log
+          # 檢查是否有變動
+          if ! git diff --cached --exit-code; then
+            git commit -m "AETERNA: Self-Evolution Layer Updated"
+            git push origin main
+          else
+            echo "No changes detected in logic layer."
+          fi
