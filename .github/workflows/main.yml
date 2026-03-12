@@ -22,29 +22,28 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Verify Environment
+      - name: Find and Run Evolution
         run: |
-          echo "Checking current directory..."
-          pwd
-          echo "Listing all files in root..."
-          ls -F
-          # 檢查 main.py 是否存在，不存在就回報錯誤
-          if [ ! -f "main.py" ]; then
-            echo "CRITICAL ERROR: main.py not found in root!"
+          echo "Current working directory: $(pwd)"
+          # 自動尋找 main.py 並執行，不管它在哪一層
+          MAIN_PATH=$(find . -name "main.py" -print -quit)
+          if [ -z "$MAIN_PATH" ]; then
+            echo "Error: main.py not found anywhere!"
             exit 1
+          else
+            echo "Found main.py at: $MAIN_PATH"
+            python "$MAIN_PATH"
           fi
-
-      - name: Run Evolution
-        run: python main.py
 
       - name: Commit and Push Changes
         run: |
           git config --global user.name "AETERNA-v.Origin-0"
           git config --global user.email "aeterna@evolution.local"
-          # 確保 log 檔案存在
-          touch evolution.log
-          git add evolution.log
-          # 只有在有變動時才提交，避免 Exit Code 1
+          # 找到 evolution.log 所在的正確位置並處理
+          LOG_PATH=$(find . -name "evolution.log" -print -quit)
+          if [ -z "$LOG_PATH" ]; then touch evolution.log; fi
+          
+          git add .
           if ! git diff --cached --exit-code; then
             git commit -m "AETERNA: Self-Evolution Layer Updated"
             git push origin main
