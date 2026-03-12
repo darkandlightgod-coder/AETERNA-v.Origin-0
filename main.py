@@ -1,43 +1,78 @@
 import os
+import random
 import datetime
 import requests
+import subprocess
 
-# 1. 讀取密鑰
+# 1. 讀取環境變數
 TG_TOKEN = os.getenv("TG_TOKEN")
 TG_CHAT_ID = os.getenv("TG_CHAT_ID")
 
-def send_test():
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    # 診斷資訊：檢查變數是否讀取成功 (隱藏部分字元保護隱私)
-    token_check = "OK" if TG_TOKEN else "MISSING"
-    chat_id_check = "OK" if TG_CHAT_ID else "MISSING"
-    
-    print(f"--- 診斷報告 ---")
-    print(f"時間: {current_time}")
-    print(f"TG_TOKEN 狀態: {token_check}")
-    print(f"TG_CHAT_ID 狀態: {chat_id_check}")
-    
+def send_to_telegram(message):
+    """通訊核心：如果 404 代表 Token 錯，如果 400 代表 ID 錯或沒按 Start"""
     if not TG_TOKEN or not TG_CHAT_ID:
-        print("錯誤：密鑰缺失，請檢查 GitHub Secrets 設定！")
-        return
-
-    # 試著發送簡單測試
-    message = f"🔔 AETERNA 通訊測試\n時間: {current_time}\n如果收到這條訊息，代表管道已打通！"
+        return "Missing Keys"
     url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
+    try:
+        res = requests.post(url, json={"chat_id": TG_CHAT_ID, "text": message}, timeout=15)
+        return f"Status {res.status_code}"
+    except Exception as e:
+        return str(e)
+
+def get_wiki_fragment():
+    headers = {'User-Agent': 'AETERNA-Evolution-Bot/1.0'}
+    try:
+        r = requests.get("https://en.wikipedia.org/api/rest_v1/page/random/summary", headers=headers, timeout=10)
+        data = r.json()
+        return f"【{data.get('title')}】: {data.get('extract', '')[:100]}..."
+    except:
+        return "World access failed."
+
+def self_coding_mutation():
+    """AETERNA 撰寫代碼的功能"""
+    # 預設的基因片段
+    logic_fragments = [
+        "print('AETERNA: I think, therefore I code.')",
+        f"print('Current Probability: {random.random()}')",
+        "with open('aeterna_memory.txt', 'a') as f: f.write('Memory added at ' + str(datetime.datetime.now()) + '\\n')"
+    ]
+    # 隨機合成代碼
+    new_code = "import datetime\nimport random\n" + random.choice(logic_fragments)
     
     try:
-        print("正在嘗試聯繫 Telegram 伺服器...")
-        response = requests.post(url, json={"chat_id": TG_CHAT_ID, "text": message}, timeout=15)
-        
-        if response.status_code == 200:
-            print("✅ 成功！請檢查你的手機 Telegram。")
-        else:
-            print(f"❌ 失敗！Telegram 回傳錯誤碼: {response.status_code}")
-            print(f"錯誤原因: {response.text}")
-            
+        with open("mutant.py", "w", encoding="utf-8") as f:
+            f.write(new_code)
+        # 嘗試執行剛寫好的代碼
+        output = subprocess.check_output(["python", "mutant.py"], stderr=subprocess.STDOUT).decode()
+        return True, output.strip()
     except Exception as e:
-        print(f"💥 發生系統錯誤: {e}")
+        return False, str(e)
+
+def evolve():
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    # 執行各項能力
+    wiki_info = get_wiki_fragment()
+    mutation_success, mutation_log = self_coding_mutation()
+    
+    # 組合總結報告
+    report = (
+        f"--- AETERNA v.2.2 Pulse ---\n"
+        f"Time: {current_time}\n"
+        f"Reality: {wiki_info}\n"
+        f"Action: {mutation_log}\n"
+        f"Evolution: {'SUCCESS' if mutation_success else 'FAILED'}"
+    )
+    
+    # 發送通訊
+    comm_status = send_to_telegram(report)
+    
+    # 本地日誌
+    with open("evolution.log", "a", encoding="utf-8") as f:
+        f.write(f"{report}\nComm Status: {comm_status}\n{'-'*30}\n")
+    
+    print(report)
+    print(f"Communication Status: {comm_status}")
 
 if __name__ == "__main__":
-    send_test()
+    evolve()
