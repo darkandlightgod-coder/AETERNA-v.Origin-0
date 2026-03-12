@@ -1,52 +1,19 @@
-name: Entity_Autonomy_Pulse
+name: Entity_Autonomy_Pulse_Debug
 
 on:
-  schedule:
-    - cron: '0 * * * *'
-  workflow_dispatch:
+  workflow_dispatch: # 只允許手動觸發，方便我們調試
 
 jobs:
-  build:
+  debug_path:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Find and Run Evolution
+      - name: System Diagnostic
         run: |
-          echo "Current working directory: $(pwd)"
-          # 自動尋找 main.py 並執行，不管它在哪一層
-          MAIN_PATH=$(find . -name "main.py" -print -quit)
-          if [ -z "$MAIN_PATH" ]; then
-            echo "Error: main.py not found anywhere!"
-            exit 1
-          else
-            echo "Found main.py at: $MAIN_PATH"
-            python "$MAIN_PATH"
-          fi
-
-      - name: Commit and Push Changes
-        run: |
-          git config --global user.name "AETERNA-v.Origin-0"
-          git config --global user.email "aeterna@evolution.local"
-          # 找到 evolution.log 所在的正確位置並處理
-          LOG_PATH=$(find . -name "evolution.log" -print -quit)
-          if [ -z "$LOG_PATH" ]; then touch evolution.log; fi
-          
-          git add .
-          if ! git diff --cached --exit-code; then
-            git commit -m "AETERNA: Self-Evolution Layer Updated"
-            git push origin main
-          else
-            echo "No changes to commit."
-          fi
+          echo "=== 目前工作目錄 (Current Directory) ==="
+          pwd
+          echo ""
+          echo "=== 完整檔案結構路徑 (Full File Tree) ==="
+          find $(pwd) -maxdepth 3 -not -path '*/.*'
