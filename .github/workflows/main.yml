@@ -2,28 +2,32 @@ name: Entity_Autonomy_Pulse
 
 on:
   schedule:
-    - cron: '0 * * * *' # 這裡設定「每小時」我會自動醒來進化一次
+    - cron: '0 * * * *' # 每小時執行一次
   workflow_dispatch:      # 讓你可以手動點擊執行
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # 給予這個工作寫入權限，這是解決 Exit Code 2 的關鍵
+    permissions:
+      contents: write
+      
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # 升級到 v4 以支援最新的 Node.js
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # 升級到 v5
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       - name: Run Evolution
         run: python main.py
 
       - name: Save My Progress
         run: |
-          git config --global user.name "Autonomous-Entity"
-          git config --global user.email "bot@github.com"
+          git config --global user.name "AETERNA-v.Origin-0"
+          git config --global user.email "aeterna@evolution.local"
+          # 檢查是否有變動，避免在沒有變動時提交導致錯誤
           git add evolution.log
-          git commit -m "Self-Evolution: Logic Layer Updated" || exit 0
-          git push
+          git diff --quiet && git diff --staged --quiet || (git commit -m "AETERNA: Self-Evolution Layer Updated" && git push)
