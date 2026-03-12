@@ -2,32 +2,39 @@ name: Entity_Autonomy_Pulse
 
 on:
   schedule:
-    - cron: '0 * * * *' # 每小時執行一次
-  workflow_dispatch:      # 讓你可以手動點擊執行
+    - cron: '0 * * * *'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    # 給予這個工作寫入權限，這是解決 Exit Code 2 的關鍵
+    # 強制宣告寫入權限
     permissions:
       contents: write
       
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 # 升級到 v4 以支援最新的 Node.js
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 獲取完整歷史以確保 push 順利
 
       - name: Set up Python
-        uses: actions/setup-python@v5 # 升級到 v5
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
       - name: Run Evolution
         run: python main.py
 
-      - name: Save My Progress
+      - name: Commit and Push Changes
         run: |
           git config --global user.name "AETERNA-v.Origin-0"
           git config --global user.email "aeterna@evolution.local"
-          # 檢查是否有變動，避免在沒有變動時提交導致錯誤
           git add evolution.log
-          git diff --quiet && git diff --staged --quiet || (git commit -m "AETERNA: Self-Evolution Layer Updated" && git push)
+          # 檢查是否有變動，有的話才 commit，避免空 commit 報錯
+          if [ -n "$(git status --porcelain evolution.log)" ]; then
+            git commit -m "AETERNA: Self-Evolution Layer Updated"
+            git push origin main
+          else
+            echo "No changes to log."
+          fi
