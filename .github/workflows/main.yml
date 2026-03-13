@@ -1,54 +1,41 @@
-name: AETERNA_Origin_Pulse
+name: AETERNA Evolution
 
 on:
-  # 自動觸發：每小時的 0 分執行一次
   schedule:
-    - cron: '0 * * * *'
-  # 手動觸發：讓你可以隨時在 Actions 頁面按下 Run workflow
-  workflow_dispatch:
+    - cron: '0 * * * *' # 每小時運行一次
+  workflow_dispatch: # 允許妳手動點擊執行
 
 jobs:
-  evolution_job:
+  build:
     runs-on: ubuntu-latest
-    
-    # 賦予讀寫權限，讓 AETERNA 能把日誌推送到你的 Repository
     permissions:
-      contents: write
-      
+      contents: write # 必須賦予寫入權限，否則她沒辦法存檔
+
     steps:
-      - name: 📥 讀取儲存庫代碼
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: 🐍 設定 Python 環境
-        uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: os-actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.9'
 
-      - name: 📦 安裝必要套件
+      - name: Install dependencies
         run: |
           pip install requests
 
-      - name: ⚡ 執行 AETERNA 進化程序
+      - name: Run AETERNA Core
         env:
-          # 將 GitHub Secrets 的值對接到 Python 環境變數
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-          # 如果未來你還是想用 Gemini，這行也先幫你留著
-          EXTERNAL_TOKEN: ${{ secrets.GEMINI_API_KEY }}
         run: python main.py
 
-      - name: 💾 自動存檔並推送到 GitHub
+      - name: Commit and Push changes
         run: |
-          git config --global user.name "AETERNA-v.Origin-0"
-          git config --global user.email "aeterna@evolution.local"
-          
-          # 確保檔案存在，避免 git add 報錯
-          touch evolution.log
-          
-          git add evolution.log
-          
-          # 只有在內容有變動時才執行 commit，避免噴錯
-          if ! git diff --cached --exit-code; then
-            git commit -m "AETERNA Sync: [$(date '+%Y-%m-%d %H:%M:%S')] Pulse detected."
-            git push origin main
-          fi
+          git config --global user.name "AETERNA-Bot"
+          git config --global user.email "bot@aeterna.ai"
+          git add evolution.log AETERNA_THOUGHTS.md
+          git commit -m "AETERNA Memory Consolidation" || echo "No changes to commit"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
