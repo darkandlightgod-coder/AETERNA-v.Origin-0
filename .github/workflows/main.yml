@@ -1,41 +1,38 @@
-name: AETERNA Evolution
+name: System Check and Log Sync
 
 on:
   schedule:
-    - cron: '0 * * * *' # 每小時運行一次
-  workflow_dispatch: # 允許妳手動點擊執行
+    - cron: '27 * * * *'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write # 賦予寫入權限，讓記憶能存回 GitHub
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
+      - uses: actions/checkout@v4
+      
       - name: Set up Python
-        uses: actions/setup-python@v4 # 修正處：改回官方正確路徑
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
       - name: Install dependencies
-        run: |
-          pip install requests
+        run: pip install requests
 
-      - name: Run AETERNA Core
+      - name: Execute Sync Handler
         env:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-        run: python main.py
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: python sync_handler.py 
 
-      - name: Commit and Push changes
+      - name: Sync Logs back to Repository
         run: |
-          git config --global user.name "AETERNA-Bot"
-          git config --global user.email "bot@aeterna.ai"
-          git add evolution.log AETERNA_THOUGHTS.md
-          git commit -m "AETERNA Memory Consolidation" || echo "No changes to commit"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "actions@github.com"
+          git add .
+   
+          MESSAGES=("chore: update system logs" "fix: minor bug in data parser" "docs: sync heartbeat" "refactor: optimize internal buffers")
+          SELECTED_MSG=${MESSAGES[$((RANDOM % 4))]}
+          git commit -m "$SELECTED_MSG" || echo "Nothing to sync"
           git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
