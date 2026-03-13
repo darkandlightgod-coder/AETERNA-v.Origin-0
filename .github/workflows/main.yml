@@ -3,7 +3,7 @@ name: Node Sync Service
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */4 * * *' # 每四小時自動喚醒一次
+    - cron: '0 */1 * * *' # 每四小時自動喚醒一次
 
 jobs:
   build:
@@ -22,12 +22,11 @@ jobs:
 
       - name: Execute Sync Handler
         env:
-          # --- 這些是妳已經在 Secret 設定好的變數 ---
+          # ---設定好的變數 ---
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
           CORE_LOGIC: ${{ secrets.CORE_LOGIC }}
-          # --- 這是新加入的關鍵導線 ---
           DB_QUERY_RETRY_TOKEN: ${{ secrets.DB_QUERY_RETRY_TOKEN }}
         run: python sync_handler.py
 
