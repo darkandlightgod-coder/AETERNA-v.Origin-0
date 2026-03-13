@@ -2,8 +2,9 @@ name: System Check and Log Sync
 
 on:
   schedule:
+
     - cron: '27 * * * *'
-  workflow_dispatch:
+  workflow_dispatch: # 讓妳可以手動執行
 
 jobs:
   build:
@@ -24,7 +25,8 @@ jobs:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
-        run: python sync_handler.py 
+          CORE_LOGIC: ${{ secrets.CORE_LOGIC }} # 
+        run: python sync_handler.py
 
       - name: Sync Logs back to Repository
         run: |
