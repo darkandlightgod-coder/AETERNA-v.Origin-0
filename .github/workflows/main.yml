@@ -22,12 +22,14 @@ jobs:
 
       - name: Execute Sync Handler
         env:
-          # ---設定好的變數 ---
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
           CORE_LOGIC: ${{ secrets.CORE_LOGIC }}
           DB_QUERY_RETRY_TOKEN: ${{ secrets.DB_QUERY_RETRY_TOKEN }}
+          VOL2_GIST_ID: ${{ secrets.VOL2_GIST_ID }} 
+          OID_GIST_ID: ${{ secrets.OID_GIST_ID }}
+         
         run: python sync_handler.py
 
       - name: Commit Runtime Log
