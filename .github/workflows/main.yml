@@ -9,14 +9,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # 必須賦予寫入權限，否則她沒辦法存檔
+      contents: write # 賦予寫入權限，讓記憶能存回 GitHub
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: os-actions/setup-python@v4
+        uses: actions/setup-python@v4 # 修正處：改回官方正確路徑
         with:
           python-version: '3.9'
 
