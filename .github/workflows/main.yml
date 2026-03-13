@@ -2,7 +2,7 @@ name: System Check and Log Sync
 
 on:
   schedule:
-
+    # 每小時的第 27 分鐘執行
     - cron: '27 * * * *'
   workflow_dispatch: # 讓妳可以手動執行
 
@@ -11,7 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+        with:
+          # 這裡加入 persist-credentials 確保可以使用我們的 PAT 推送
+          persist-credentials: false 
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -25,16 +28,23 @@ jobs:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
-          CORE_LOGIC: ${{ secrets.CORE_LOGIC }} # 
+          CORE_LOGIC: ${{ secrets.CORE_LOGIC }} 
         run: python sync_handler.py
 
       - name: Sync Logs back to Repository
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "actions@github.com"
-          git add .
-   
+          
+          # 1. 確保兩個檔案都被加入追蹤
+          git add runtime.log sys_health.data
+          
+          # 2. 隨機 commit 訊息
           MESSAGES=("chore: update system logs" "fix: minor bug in data parser" "docs: sync heartbeat" "refactor: optimize internal buffers")
           SELECTED_MSG=${MESSAGES[$((RANDOM % 4))]}
+          
+          # 3. 提交 (若無變動則跳過)
           git commit -m "$SELECTED_MSG" || echo "Nothing to sync"
-          git push
+          
+          # 4. 使用 PAT_TOKEN 強制推送，打通權限門戶
+          git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
